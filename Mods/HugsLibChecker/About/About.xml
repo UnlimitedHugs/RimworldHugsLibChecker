@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+	<name>HugsLibChecker</name>
+	<author>UnlimitedHugs</author>
+	<targetVersion>0.15.0</targetVersion>
+	<description>This is a shared library. Instead of installing it separately, mods who wish to use it should include the assembly in their releases.</description>	
+</ModMetaData>
