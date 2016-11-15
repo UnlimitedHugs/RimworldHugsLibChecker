@@ -1,4 +1,4 @@
-## HugsLib companion library
+## HugsLib version checker
 This is a tiny library to be included with mods that use HugsLib.
 
 It checks that HugsLib is installed and enabled, and its version is at least that required by the mod. If these checks fail, a dialog is displayed at startup, explaining to the player what they can do to fix the situation. The dialog will contain a button to open the browser on the HugsLib release page, or the Steam workshop page if used on the Steam version.
