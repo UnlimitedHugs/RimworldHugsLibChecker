@@ -8,8 +8,12 @@ namespace HugsLibChecker {
 	public static class HugsLibChecker {
 		private const string TokenObjectName = "HugsLibCheckerToken";
 		private const string LibraryModName = "HugsLib";
+		private const string MissingLibraryTitle = "Missing library";
 		private const string MissingLibraryMessage = "<b>{0}</b> requires the <b>HugsLib library</b> to work properly.\nWould you like to download it now?";
+		private const string OutdatedLibraryTitle = "Library update required";
 		private const string OutdatedLibraryMessage = "<b>{0}</b> requires version <b>{1}</b> of the <b>HugsLib library</b> to work properly.\nWould you like to update it now?";
+		private const string ImproperLoadOrderTitle = "Improper mod load order";
+		private const string ImproperLoadOrderMessage = "The <b>HugsLib library</b> must appear before the mods that use it in the mod load order to work properly.\nPlease rearrange your mods and restart your game.";
 		
 		// entry point
 		static HugsLibChecker() {
@@ -17,15 +21,21 @@ namespace HugsLibChecker {
 				if (ChecksAlreadyPerformed()) return;
 				var relatedMods = EnumerateLibraryRelatedMods();
 				if (!LibraryIsLoaded(relatedMods)) {
-					ScheduleDialog(String.Format(MissingLibraryMessage, GetFirstLibraryConsumerName(relatedMods)));
+					ScheduleDialog(MissingLibraryTitle, String.Format(MissingLibraryMessage, GetFirstLibraryConsumerName(relatedMods)), true);
 				} else if (!LibraryIsUpToDate(relatedMods)) {
 					string consumerName;
 					var requiredVersion = GetHighestRequiredLibraryVersion(relatedMods, out consumerName);
-					ScheduleDialog(String.Format(OutdatedLibraryMessage, consumerName, requiredVersion));
+					ScheduleDialog(OutdatedLibraryTitle, String.Format(OutdatedLibraryMessage, consumerName, requiredVersion), true);
+				} else if (!LibraryIsLoadedBeforeConsumers(relatedMods)) {
+					ScheduleDialog(ImproperLoadOrderTitle, ImproperLoadOrderMessage, false);
 				}
 			} catch (Exception e) {
 				Log.Error("An exception was caused by the HugsLibChecker assembly. Exception was: "+e);
 			}
+		}
+
+		private static bool LibraryIsLoadedBeforeConsumers(List<LibaryRelatedMod> relatedMods) {
+			return relatedMods.Count > 0 && relatedMods[0].isLibrary;
 		}
 
 		private static bool ChecksAlreadyPerformed() {
@@ -102,9 +112,9 @@ namespace HugsLibChecker {
 			return libraryVersion;
 		}
 
-		private static void ScheduleDialog(string message) {
+		private static void ScheduleDialog(string title, string message, bool showDownloadButton) {
 			LongEventHandler.QueueLongEvent(() => {
-				Find.WindowStack.Add(new Dialog_LibraryError(message));
+				Find.WindowStack.Add(new Dialog_LibraryError(title, message, showDownloadButton));
 			}, null, false, null);
 		}
 		
