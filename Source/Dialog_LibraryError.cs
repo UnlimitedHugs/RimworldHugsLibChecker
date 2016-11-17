@@ -31,7 +31,7 @@ namespace HugsLibChecker {
 		public override void DoWindowContents(Rect inRect) {
 			Text.Font = GameFont.Medium;
 			var titleRect = new Rect(inRect.x, inRect.y, inRect.width, 40);
-			Widgets.Label(new Rect(inRect.x, inRect.y, inRect.width, inRect.height - DownloadButtonSize.y), title);
+			Widgets.Label(titleRect, title);
 			Text.Font = GameFont.Small;
 			Widgets.Label(new Rect(inRect.x, inRect.y + titleRect.height, inRect.width, inRect.height - DownloadButtonSize.y - titleRect.height), message);
 			Rect closeButtonRect;
