@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Verse;
+using Verse.Steam;
 
 namespace HugsLibChecker {
 	public class Dialog_LibraryError : Window {
@@ -7,6 +8,7 @@ namespace HugsLibChecker {
 		private readonly Color DownloadButtonColor = Color.green;
 		private readonly Vector2 DownloadButtonSize = new Vector2(180, 40);
 		private const string GitHubDownloadUrl = "https://github.com/UnlimitedHugs/RimworldHugsLib/releases/latest";
+		private const string SteamDownloadUrl = "http://steamcommunity.com/sharedfiles/filedetails/?id=818773962";
 
 		private readonly string title;
 		private readonly string message;
@@ -41,7 +43,8 @@ namespace HugsLibChecker {
 				var downloadButtonRect = new Rect(inRect.x, inRect.height - DownloadButtonSize.y, DownloadButtonSize.x, DownloadButtonSize.y);
 				if (Widgets.ButtonText(downloadButtonRect, DownloadButtonCaption)) {
 					Close();
-					Application.OpenURL(GitHubDownloadUrl);
+					var url = SteamManager.Initialized ? SteamDownloadUrl : GitHubDownloadUrl;
+					Application.OpenURL(url);
 				}
 				GUI.color = prevColor;
 				closeButtonRect = new Rect(inRect.width - CloseButSize.x, inRect.height - CloseButSize.y, CloseButSize.x, CloseButSize.y);
