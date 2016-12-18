@@ -4,9 +4,9 @@
 
 This is a tiny library to be included with mods that use HugsLib.
 
-[Download the DLL](https://github.com/UnlimitedHugs/RimworldHugsLibChecker/blob/master/Mods/HugsLibChecker/Assemblies/%24HugsLibChecker.dll)
+[Download the DLL](https://github.com/UnlimitedHugs/RimworldHugsLibChecker/blob/master/Mods/HugsLibChecker/Assemblies/%24HugsLibChecker.dll) (put in /Assemblies folder)
 
-[Sample configuration file](https://github.com/UnlimitedHugs/RimworldHugsLibChecker/blob/master/Mods/HugsLibChecker/About/Version.xml)
+[Sample configuration file](https://github.com/UnlimitedHugs/RimworldHugsLibChecker/blob/master/Mods/HugsLibChecker/About/Version.xml) (put in /About folder)
 
 [HugsLib on the Steam workshop](http://steamcommunity.com/sharedfiles/filedetails/?id=818773962)
 
