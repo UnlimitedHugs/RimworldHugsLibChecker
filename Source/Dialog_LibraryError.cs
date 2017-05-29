@@ -13,6 +13,7 @@ namespace HugsLibChecker {
 		private readonly string title;
 		private readonly string message;
 		private readonly bool showDownloadButton;
+		private bool closedLogWindow;
 
 		public override Vector2 InitialSize {
 			get { return new Vector2(500f, 400f); }
@@ -27,10 +28,22 @@ namespace HugsLibChecker {
 			doCloseX = false;
 			forcePause = true;
 			absorbInputAroundWindow = true;
-			layer = WindowLayer.SubSuper;
+		}
+
+		public override void PostClose() {
+			base.PostClose();
+			if (closedLogWindow) {
+				EditWindow_Log.wantsToOpen = true;
+			}
 		}
 
 		public override void DoWindowContents(Rect inRect) {
+			var logWindow = Find.WindowStack.WindowOfType<EditWindow_Log>();
+			if (logWindow != null) {
+				// hide the log window while we are open
+				logWindow.Close(false);
+				closedLogWindow = true;
+			}
 			Text.Font = GameFont.Medium;
 			var titleRect = new Rect(inRect.x, inRect.y, inRect.width, 40);
 			Widgets.Label(titleRect, title);

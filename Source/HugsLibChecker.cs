@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using Verse;
 
 namespace HugsLibChecker {
-	[StaticConstructorOnStartup]
-	public static class HugsLibChecker {
+	// do not move or rename. Has detection by full class name
+	public class HugsLibChecker : Mod {
 		private const string TokenObjectName = "HugsLibCheckerToken";
 		private const string LibraryModName = "HugsLib";
 		private const string MissingLibraryTitle = "Missing library";
@@ -14,12 +16,21 @@ namespace HugsLibChecker {
 		private const string OutdatedLibraryMessage = "<b>{0}</b> requires version <b>{1}</b> of the <b>HugsLib library</b> to work properly.\nWould you like to update it now?";
 		private const string ImproperLoadOrderTitle = "Improper mod load order";
 		private const string ImproperLoadOrderMessage = "The <b>HugsLib library</b> must appear before the mods that use it in the mod load order to work properly.\nPlease rearrange your mods and restart your game.";
-		
+
 		// entry point
-		static HugsLibChecker() {
+		public HugsLibChecker(ModContentPack content) : base(content) {
+			RunAllChecks();
+		}
+
+		private void RunAllChecks() {
 			try {
-				if (ChecksAlreadyPerformed()) return;
+				if (ChecksAlreadyPerformed()) {
+					return;
+				}
 				var relatedMods = EnumerateLibraryRelatedMods();
+				if (!CheckerHasHighestAvailableVersion(relatedMods)) {
+					return;
+				}
 				if (!LibraryIsLoaded(relatedMods)) {
 					ScheduleDialog(MissingLibraryTitle, String.Format(MissingLibraryMessage, GetFirstLibraryConsumerName(relatedMods)), true);
 				} else if (!LibraryIsUpToDate(relatedMods)) {
@@ -34,37 +45,38 @@ namespace HugsLibChecker {
 			}
 		}
 
-		private static bool LibraryIsLoadedBeforeConsumers(List<LibaryRelatedMod> relatedMods) {
+		private bool CheckerHasHighestAvailableVersion(List<LibaryRelatedMod> relatedMods) {
+			var maxVersion = relatedMods.SelectMany(m => m.checkerAssemblies)
+				.Select(a => a.GetName().Version)
+				.Aggregate((vmax, v) => v > vmax ? v : vmax);
+			return GetType().Assembly.GetName().Version == maxVersion;
+		}
+
+		private bool LibraryIsLoadedBeforeConsumers(List<LibaryRelatedMod> relatedMods) {
 			return relatedMods.Count > 0 && relatedMods[0].isLibrary;
 		}
 
-		private static bool ChecksAlreadyPerformed() {
+		private bool ChecksAlreadyPerformed() {
 			var tokenObject = GameObject.Find(TokenObjectName);
 			if (tokenObject != null) return true;
 			new GameObject(TokenObjectName);
 			return false;
 		}
 
-		private static List<LibaryRelatedMod> EnumerateLibraryRelatedMods() {
-			var checkerAssemblyName = typeof (HugsLibChecker).Assembly.GetName().Name;
+		private List<LibaryRelatedMod> EnumerateLibraryRelatedMods() {
+			var checkerTypeName = typeof(HugsLibChecker).FullName;
 			var relatedMods = new List<LibaryRelatedMod>();
 			foreach (var modContentPack in LoadedModManager.RunningMods) {
 				var versionFile = VersionFile.TryParseVersionFile(modContentPack);
-				var hasCheckerAssembly = false;
-				foreach (var assembly in modContentPack.assemblies.loadedAssemblies) {
-					if (assembly.GetName().Name == checkerAssemblyName) {
-						hasCheckerAssembly = true;
-						break;
-					}
-				}
-				if (hasCheckerAssembly || versionFile != null) {
-					relatedMods.Add(new LibaryRelatedMod(modContentPack.Name, versionFile));	
+				var checkerAssemblies = modContentPack.assemblies.loadedAssemblies.Where(a => a.GetType(checkerTypeName, false) != null).ToList();
+				if (checkerAssemblies.Count > 0 || versionFile != null) {
+					relatedMods.Add(new LibaryRelatedMod(modContentPack.Name, versionFile, checkerAssemblies));
 				}
 			}
 			return relatedMods;
 		}
 
-		private static bool LibraryIsLoaded(List<LibaryRelatedMod> relatedMods) {
+		private bool LibraryIsLoaded(List<LibaryRelatedMod> relatedMods) {
 			for (int i = 0; i < relatedMods.Count; i++) {
 				var mod = relatedMods[i];
 				if (mod.isLibrary) return true;
@@ -72,21 +84,21 @@ namespace HugsLibChecker {
 			return false;
 		}
 
-		private static bool LibraryIsUpToDate(List<LibaryRelatedMod> relatedMods) {
+		private bool LibraryIsUpToDate(List<LibaryRelatedMod> relatedMods) {
 			string consumerName;
 			var libraryVersion = TryGetLibraryVersion(relatedMods);
 			var requiredVersion = GetHighestRequiredLibraryVersion(relatedMods, out consumerName);
 			return libraryVersion != null && libraryVersion >= requiredVersion;
 		}
 
-		private static string GetFirstLibraryConsumerName(List<LibaryRelatedMod> relatedMods) {
+		private string GetFirstLibraryConsumerName(List<LibaryRelatedMod> relatedMods) {
 			for (int i = 0; i < relatedMods.Count; i++) {
 				if (!relatedMods[i].isLibrary) return relatedMods[i].name;
 			}
 			return "";
 		}
 
-		private static Version GetHighestRequiredLibraryVersion(List<LibaryRelatedMod> relatedMods, out string consumerName) {
+		private Version GetHighestRequiredLibraryVersion(List<LibaryRelatedMod> relatedMods, out string consumerName) {
 			var maxRequiredVersion = new Version();
 			consumerName = "";
 			for (int i = 0; i < relatedMods.Count; i++) {
@@ -101,7 +113,7 @@ namespace HugsLibChecker {
 			return maxRequiredVersion;
 		}
 
-		private static Version TryGetLibraryVersion(List<LibaryRelatedMod> relatedMods) {
+		private Version TryGetLibraryVersion(List<LibaryRelatedMod> relatedMods) {
 			Version libraryVersion = null;
 			for (int i = 0; i < relatedMods.Count; i++) {
 				var mod = relatedMods[i];
@@ -112,7 +124,7 @@ namespace HugsLibChecker {
 			return libraryVersion;
 		}
 
-		private static void ScheduleDialog(string title, string message, bool showDownloadButton) {
+		private void ScheduleDialog(string title, string message, bool showDownloadButton) {
 			LongEventHandler.QueueLongEvent(() => {
 				Find.WindowStack.Add(new Dialog_LibraryError(title, message, showDownloadButton));
 			}, null, false, null);
@@ -122,10 +134,12 @@ namespace HugsLibChecker {
 			public readonly string name;
 			public readonly VersionFile file;
 			public readonly bool isLibrary;
+			public readonly List<Assembly> checkerAssemblies; 
 
-			public LibaryRelatedMod(string name, VersionFile file) {
+			public LibaryRelatedMod(string name, VersionFile file, List<Assembly> checkerAssemblies) {
 				this.name = name;
 				this.file = file;
+				this.checkerAssemblies = checkerAssemblies;
 				isLibrary = name == LibraryModName;
 			}
 		}
