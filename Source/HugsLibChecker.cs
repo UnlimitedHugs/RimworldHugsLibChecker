@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
 using Verse;
 
 namespace HugsLibChecker {
@@ -16,6 +15,9 @@ namespace HugsLibChecker {
 		private const string OutdatedLibraryMessage = "<b>{0}</b> requires version <b>{1}</b> of the <b>HugsLib library</b> to work properly.\nWould you like to update it now?";
 		private const string ImproperLoadOrderTitle = "Improper mod load order";
 		private const string ImproperLoadOrderMessage = "The <b>HugsLib library</b> must appear before the mods that use it in the mod load order to work properly.\nPlease rearrange your mods and restart your game.";
+
+		// do not rename- referenced by reflection
+		public static bool ChecksPerformed;
 
 		// entry point
 		public HugsLibChecker(ModContentPack content) : base(content) {
@@ -45,38 +47,44 @@ namespace HugsLibChecker {
 			}
 		}
 
-		private bool CheckerHasHighestAvailableVersion(List<LibaryRelatedMod> relatedMods) {
+		private bool CheckerHasHighestAvailableVersion(List<LibraryRelatedMod> relatedMods) {
 			var maxVersion = relatedMods.SelectMany(m => m.checkerAssemblies)
 				.Select(a => a.GetName().Version)
 				.Aggregate((vmax, v) => v > vmax ? v : vmax);
 			return GetType().Assembly.GetName().Version == maxVersion;
 		}
 
-		private bool LibraryIsLoadedBeforeConsumers(List<LibaryRelatedMod> relatedMods) {
+		private bool LibraryIsLoadedBeforeConsumers(List<LibraryRelatedMod> relatedMods) {
 			return relatedMods.Count > 0 && relatedMods[0].isLibrary;
 		}
 
 		private bool ChecksAlreadyPerformed() {
-			var tokenObject = GameObject.Find(TokenObjectName);
-			if (tokenObject != null) return true;
-			new GameObject(TokenObjectName);
+			var checkerTypeName = typeof(HugsLibChecker).FullName;
+			var checkerTypes = AppDomain.CurrentDomain.GetAssemblies()
+				.Select(a => a == null ? null : a.GetType(checkerTypeName, false)).Where(t => t != null);
+			var anyAssemblyAlreadyPerformedChecks = checkerTypes.Select(t => t.GetField("ChecksPerformed", BindingFlags.Public | BindingFlags.Static))
+				.Any(f => f != null && (bool)f.GetValue(null));
+			if (anyAssemblyAlreadyPerformedChecks) {
+				return true;
+			}
+			ChecksPerformed = true;
 			return false;
 		}
 
-		private List<LibaryRelatedMod> EnumerateLibraryRelatedMods() {
+		private List<LibraryRelatedMod> EnumerateLibraryRelatedMods() {
 			var checkerTypeName = typeof(HugsLibChecker).FullName;
-			var relatedMods = new List<LibaryRelatedMod>();
+			var relatedMods = new List<LibraryRelatedMod>();
 			foreach (var modContentPack in LoadedModManager.RunningMods) {
 				var versionFile = VersionFile.TryParseVersionFile(modContentPack);
 				var checkerAssemblies = modContentPack.assemblies.loadedAssemblies.Where(a => a.GetType(checkerTypeName, false) != null).ToList();
 				if (checkerAssemblies.Count > 0 || versionFile != null) {
-					relatedMods.Add(new LibaryRelatedMod(modContentPack.Name, versionFile, checkerAssemblies));
+					relatedMods.Add(new LibraryRelatedMod(modContentPack.Name, versionFile, checkerAssemblies));
 				}
 			}
 			return relatedMods;
 		}
 
-		private bool LibraryIsLoaded(List<LibaryRelatedMod> relatedMods) {
+		private bool LibraryIsLoaded(List<LibraryRelatedMod> relatedMods) {
 			for (int i = 0; i < relatedMods.Count; i++) {
 				var mod = relatedMods[i];
 				if (mod.isLibrary) return true;
@@ -84,21 +92,21 @@ namespace HugsLibChecker {
 			return false;
 		}
 
-		private bool LibraryIsUpToDate(List<LibaryRelatedMod> relatedMods) {
+		private bool LibraryIsUpToDate(List<LibraryRelatedMod> relatedMods) {
 			string consumerName;
 			var libraryVersion = TryGetLibraryVersion(relatedMods);
 			var requiredVersion = GetHighestRequiredLibraryVersion(relatedMods, out consumerName);
 			return libraryVersion != null && libraryVersion >= requiredVersion;
 		}
 
-		private string GetFirstLibraryConsumerName(List<LibaryRelatedMod> relatedMods) {
+		private string GetFirstLibraryConsumerName(List<LibraryRelatedMod> relatedMods) {
 			for (int i = 0; i < relatedMods.Count; i++) {
 				if (!relatedMods[i].isLibrary) return relatedMods[i].name;
 			}
 			return "";
 		}
 
-		private Version GetHighestRequiredLibraryVersion(List<LibaryRelatedMod> relatedMods, out string consumerName) {
+		private Version GetHighestRequiredLibraryVersion(List<LibraryRelatedMod> relatedMods, out string consumerName) {
 			var maxRequiredVersion = new Version();
 			consumerName = "";
 			for (int i = 0; i < relatedMods.Count; i++) {
@@ -113,7 +121,7 @@ namespace HugsLibChecker {
 			return maxRequiredVersion;
 		}
 
-		private Version TryGetLibraryVersion(List<LibaryRelatedMod> relatedMods) {
+		private Version TryGetLibraryVersion(List<LibraryRelatedMod> relatedMods) {
 			Version libraryVersion = null;
 			for (int i = 0; i < relatedMods.Count; i++) {
 				var mod = relatedMods[i];
@@ -130,13 +138,13 @@ namespace HugsLibChecker {
 			}, null, false, null);
 		}
 		
-		private class LibaryRelatedMod {
+		private class LibraryRelatedMod {
 			public readonly string name;
 			public readonly VersionFile file;
 			public readonly bool isLibrary;
 			public readonly List<Assembly> checkerAssemblies; 
 
-			public LibaryRelatedMod(string name, VersionFile file, List<Assembly> checkerAssemblies) {
+			public LibraryRelatedMod(string name, VersionFile file, List<Assembly> checkerAssemblies) {
 				this.name = name;
 				this.file = file;
 				this.checkerAssemblies = checkerAssemblies;
