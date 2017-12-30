@@ -1,7 +1,5 @@
 ## HugsLib version checker
 
-**Notice: this assembly is intended for use with the A16 version of HugsLib.**
-
 This is a tiny library to be included with mods that use HugsLib.
 
 [Download the DLL](https://github.com/UnlimitedHugs/RimworldHugsLibChecker/blob/master/Mods/HugsLibChecker/Assemblies/%24HugsLibChecker.dll) (put in /Assemblies folder)
