@@ -23,7 +23,7 @@ namespace HugsLibChecker {
 			this.title = title;
 			this.message = message;
 			this.showDownloadButton = showDownloadButton;
-			closeOnEscapeKey = true;
+			closeOnCancel = true;
 			doCloseButton = false;
 			doCloseX = false;
 			forcePause = true;
