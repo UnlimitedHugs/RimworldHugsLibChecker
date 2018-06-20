@@ -1,3 +1,5 @@
+![Version](https://img.shields.io/badge/Rimworld-1.0-brightgreen.svg) [![NuGet](https://img.shields.io/nuget/v/UnlimitedHugs.Rimworld.HugsLibChecker.svg)](https://www.nuget.org/packages/UnlimitedHugs.Rimworld.HugsLibChecker/)
+
 ## HugsLib version checker
 
 This is a tiny library to be included with mods that use HugsLib.
