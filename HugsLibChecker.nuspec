@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>UnlimitedHugs.Rimworld.HugsLibChecker</id>
-		<version>4.0.0</version>
+		<version>1.0.0</version>
 		<title>HugsLib Checker</title>
 		<authors>UnlimitedHugs</authors>
 		<owners>UnlimitedHugs</owners>
@@ -12,7 +12,7 @@
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>This assembly is to be included with mods that make use of the HugsLib library. Ensures that HugsLib is loaded before your mod. Gives the player instructions if HugsLib is missing or mod order is improper. Can optionally enforce e minimum version of HugsLib to be present (see GitHub readme for instructions).</description>
 		<summary>Companion assembly for mods using HugsLib.</summary>
-		<releaseNotes>First upload.</releaseNotes>
+		<releaseNotes>5.0.0: Updated for Rimworld 1.0</releaseNotes>
 		<copyright>Copyright 2017</copyright>
 		<tags>Rimworld Mod</tags>
 	</metadata>
