@@ -1,8 +1,17 @@
-![Version](https://img.shields.io/badge/Rimworld-1.0-brightgreen.svg) [![NuGet](https://img.shields.io/nuget/v/UnlimitedHugs.Rimworld.HugsLibChecker.svg)](https://www.nuget.org/packages/UnlimitedHugs.Rimworld.HugsLibChecker/)
+---
+
+### Deprecation warning
+
+HugsLibChecker is no longer supported, nor required in Rimworld versions 1.1+  
+Dependencies between mods can now easily be achieved with [appropriate tags](https://github.com/UnlimitedHugs/RimworldHugsLib/#dependency-tags) in your About.xml file.
+
+---
+
+
+
+![Version](https://img.shields.io/badge/Rimworld-1.0-brightgreen.svg)[![NuGet](https://img.shields.io/nuget/v/UnlimitedHugs.Rimworld.HugsLibChecker.svg)](https://www.nuget.org/packages/UnlimitedHugs.Rimworld.HugsLibChecker/)
 
 ## HugsLib version checker
-
-This is a tiny library to be included with mods that use HugsLib.
 
 [Download the DLL](https://github.com/UnlimitedHugs/RimworldHugsLibChecker/blob/master/Mods/HugsLibChecker/Assemblies/%24HugsLibChecker.dll) (put in /Assemblies folder)
 
